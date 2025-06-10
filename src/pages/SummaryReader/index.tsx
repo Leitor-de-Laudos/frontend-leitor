@@ -31,20 +31,35 @@ export function SummaryReader() {
   }
 
   const extractExplanationAndConclusion = (content: string) => {
-   const regex = /\*\*Explicação\*\*:?\s*(.*?)\s*\*\*Conclusão\*\*:?\s*(.*)/s;
-   const match = content.match(regex);
+    const explanationTag = "**Explicação:**";
+    const conclusionTag = "**Conclusão:**";
 
-   if (!match) return { explanation: content.trim(), conclusion: "" };
+    const explanationIndex = content.indexOf(explanationTag);
+    const conclusionIndex = content.indexOf(conclusionTag);
 
-   const [, explanation, conclusion] = match;
-   return {
-    explanation: explanation.trim(),
-    conclusion: conclusion.trim(),
-   };
+    if (explanationIndex === -1 || conclusionIndex === -1 || conclusionIndex < explanationIndex) {
+      return { explanation: content.trim(), conclusion: "" };
+    }
+
+    const explanation = content
+      .substring(explanationIndex + explanationTag.length, conclusionIndex)
+      .trim();
+
+    const conclusion = content
+      .substring(conclusionIndex + conclusionTag.length)
+      .trim();
+
+    return { explanation, conclusion };
   };
 
-  const formatParagraphs = (text: string) =>
-    text.split(/(?<=\.)\s+/).map((sentence, index) => <p key={index}>{sentence}</p>);
+
+  const formatTextToParagraphs = (text: string) => {
+    return text
+      .split(/\n|\.\s+/) // quebra em frases por ponto final ou nova linha
+      .filter(Boolean)
+      .map((sentence, index) => <p key={index}>{sentence.trim()}.</p>);
+  };
+
 
   const { explanation, conclusion } = extractExplanationAndConclusion(readerSpecific?.content || "");
 
@@ -64,19 +79,20 @@ export function SummaryReader() {
       <main>
        {readerSpecific?.content ? (
         <>
-         <div>
-          <h2>Explicação</h2>
-          {formatParagraphs(explanation)}
-         </div>
-         <div>
-          <h2>Conclusão</h2>
-          {formatParagraphs(conclusion)}
-         </div>
+          <div>
+            <h2>Explicação</h2>
+            {formatTextToParagraphs(explanation)}
+          </div>
+          <div>
+            <h2>Conclusão</h2>
+            {formatTextToParagraphs(conclusion)}
+          </div>
         </>
-       ) : (
-        <p>Carregando...</p>
+        ) : (
+          <p>Carregando...</p>
        )}
       </main>
+
     </SummaryContainer>
   );
 }
