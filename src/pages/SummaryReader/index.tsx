@@ -31,15 +31,20 @@ export function SummaryReader() {
   }
 
   const extractExplanationAndConclusion = (content: string) => {
-    const match = content.match(/\*\*Explicação\*\*(.*?)\*\*Conclusão\*\*(.*)/s);
-    if (!match) return { explanation: content, conclusion: "" };
+   const regex = /\*\*Explicação\*\*:?\s*(.*?)\s*\*\*Conclusão\*\*:?\s*(.*)/s;
+   const match = content.match(regex);
 
-    const [, explanation, conclusion] = match;
-    return {
-      explanation: explanation.trim(),
-      conclusion: conclusion.trim(),
-    };
+   if (!match) return { explanation: content.trim(), conclusion: "" };
+
+   const [, explanation, conclusion] = match;
+   return {
+    explanation: explanation.trim(),
+    conclusion: conclusion.trim(),
+   };
   };
+
+  const formatParagraphs = (text: string) =>
+    text.split(/(?<=\.)\s+/).map((sentence, index) => <p key={index}>{sentence}</p>);
 
   const { explanation, conclusion } = extractExplanationAndConclusion(readerSpecific?.content || "");
 
@@ -57,20 +62,20 @@ export function SummaryReader() {
       </header>
 
       <main>
-        {readerSpecific?.content ? (
-          <>
-            <div>
-              <h2>Explicação</h2>
-              <p>{explanation}</p>
-            </div>
-            <div>
-              <h2>Conclusão</h2>
-              <p>{conclusion}</p>
-            </div>
-          </>
-        ) : (
-          <p>Carregando...</p>
-        )}
+       {readerSpecific?.content ? (
+        <>
+         <div>
+          <h2>Explicação</h2>
+          {formatParagraphs(explanation)}
+         </div>
+         <div>
+          <h2>Conclusão</h2>
+          {formatParagraphs(conclusion)}
+         </div>
+        </>
+       ) : (
+        <p>Carregando...</p>
+       )}
       </main>
     </SummaryContainer>
   );
